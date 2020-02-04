@@ -2,7 +2,7 @@ import cv2,time
 
 # type 0 for built-in camera
 # type 2 for the external camera
-video = cv2.VideoCapture(2)
+video = cv2.VideoCapture(1)
 
 # frame is just the first frame
 a=1
