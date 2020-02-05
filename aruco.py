@@ -96,16 +96,16 @@ def detect_tag():
     with np.load('calib_parameters.npz') as X:
         mtx, dist, _, _ = [X[i] for i in ('mtx', 'dist', 'rvecs', 'tvecs')]
 
-    cap = cv2.VideoCapture(1)
+    cap = cv2.VideoCapture(0)
 
     while (True):
         # Capture frame-by-frame
         ret, frame = cap.read()
         # print(frame.shape) #480x640
         # Our operations on the frame come here
-        # gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-        gray = frame
+        # gray = frame
 
         aruco_dict = aruco.Dictionary_get(aruco.DICT_6X6_250)
         parameters = aruco.DetectorParameters_create()
@@ -117,26 +117,27 @@ def detect_tag():
             mgPoints]]]]) -> corners, ids, rejectedImgPoints
             '''
         # lists of ids and the corners beloning to each id
-        corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict, parameters=parameters)
+        corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict, parameters=parameters, cameraMatrix=mtx, distCoeff=dist)
 
 
         # print(corners)
 
 
 
-        # It's working.
-        # my problem was that the cellphone put black all around it. The alrogithm
-        # depends very much upon finding rectangular black blobs
-
         # draw borders on the original image
         gray = aruco.drawDetectedMarkers(gray, corners)
 
-        # draw coordinate system on the original image
-        rvecs, tvec, _ = cv2.aruco.estimatePoseSingleMarkers(corners, 0.0239, mtx, dist)
+        # the pose estimate is not accurate. I suggest we not use it.
+        # # draw coordinate system on the original image
+        rvecs, tvec, _ = cv2.aruco.estimatePoseSingleMarkers(corners, 0.0229, mtx, dist)
+        # #
+        if ids is not None:
 
-        if rvecs is not None:
-            gray = cv2.aruco.drawAxis(gray, mtx, dist, rvecs, tvec, 0.05)
-            print(rvecs.shape)
+            # plot for all markers if there are multiple
+            for j in range(rvecs.shape[0]):
+                gray = cv2.aruco.drawAxis(gray, mtx, dist, rvecs[j], tvec[j], 0.02)
+            # print(rvecs.shape)
+                print(tvec)
 
         cv2.imshow('frame', gray)
         if cv2.waitKey(1) & 0xFF == ord('q'):
